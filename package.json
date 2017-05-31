@@ -1,0 +1,14 @@
+{
+  "name": "jsparser",
+  "version": "1.0.0",
+  "description": "transpile basic sql queries to mongodb queries",
+  "scripts": {
+    "test": "pegjs sqltomongo.pegjs;mocha",
+    "build": "pegjs sqltomongo.pegjs"
+  },
+  "author": "jodevsa",
+  "license": "ISC",
+  "dependencies": {
+    "pegjs": "^0.10.0"
+  }
+}
