@@ -1,18 +1,11 @@
-{var _conditions=[];
-var base_object={"$and":[]}
-var second_object={};
-var table="";
-var _where={}
-var last="dict";
-var big=_where
 
-}
 sql="select" _ cols:col _ "from" _ table:table _ where:where _  semicolon {
+	let show={}
   for(var i=0;i<cols.length;i++){
-  	second_object[cols[i]]=1;
+  	show[cols[i]]=1;
   }
 
-  return {"collection":table,"conditions":_where,"show":second_object}
+  return {"collection":table,"conditions":where|| {},"show":show ||{}}
 
 
 
@@ -20,83 +13,56 @@ sql="select" _ cols:col _ "from" _ table:table _ where:where _  semicolon {
 semicolon=";"?
 objects=col
 curly_where="("_ w:w _")"{
-
-
-if(!Array.isArray(big)){
-
-	_where=w;
-    }
-else{
-
-big.push(w)
-}
 return w;
-
 }
 
 
 where=("where" _ w:w{
+return w;
 
+})?
 
-if(!Array.isArray(big)){
+  test=condition:(condition/curly_where) _ operator:((op:(and_operator/or_operator) _{return op}) )? {
 
-	_where=w;
-    }
-else{
-big.push(w)
-}
-return w;})?
+    return {"condition":condition,"operator":operator}
+  }
+  w=data:(test)*  {
 
-  w=c:condition _ lol:((and_operator/or_operator) _ M:(w))*  {
+  	let original_object={}
+  	let current_state=original_object;
 
+    for(var i=0;i<data.length;i++){
+        var current_operator=data[i]["operator"]
 
-    let test=lol[0]
-
-
-
-    if(test!=undefined && test.length==3 && test[0]=="and"){
-
-
-    	console.log(test[0])
-        if(!Array.isArray(big)){
-    	big["$and"]=[test[2]];
-        big=big["$and"]
-        //alert(JSON.stringify(big));
-		}
+        if(!Array.isArray(current_state)){
+        if(current_operator==null){
+        }
+        	if(current_operator=== null && i==0){
+            	original_object=data[i]["condition"];
+                continue;
+            }
+        	current_state["$"+current_operator]=[]
+            current_state=current_state["$"+current_operator]
+            current_state.push(data[i]["condition"])
+        }
         else{
-
-        let dic={}
-        dic["$and"]=[test[2]];
-        big.push(dic);
-        big=dic["$and"];
-
+        if(current_operator=== null && i==data.length-1 ){
+        current_state.push(data[i]["condition"])
+        	continue;
         }
 
 
-    }
-    if(test!=undefined && test.length==3 && test[0]=="or"){
+		var length=current_state.length
+       current_state.push({["$"+current_operator]:[data[i]["condition"]]})
 
+       current_state=current_state[current_state.length-1]["$"+current_operator]
 
-    	console.log(test[0])
-
-           if(!Array.isArray(big)){
-    	big["$or"]=[test[2]];
-        big=big["$or"]
-		}
-        else{
-
-        let dic={}
-        dic["$or"]=[test[2]];
-        big.push(dic);
-        big=dic["$or"];
         }
 
-
     }
+            return original_object
 
 
-
-    return c;
   }
 condition=condition_in/
 		  condition_between/
@@ -156,7 +122,7 @@ compare="=" / "<" /">"
 text=[a-zA-z0-9.!/]*
 number= [0-9.]* {return JSON.parse(text())}
 rtext=([a-zA-z0-9]/'"')*
-table=tbl:[a-zA-z0-9]* {table=text();return text()}
+table=tbl:[a-zA-z0-9]* {return text()}
 col=col:[a-zA-z0-9/*,.]* {
 var columns=text();
 
@@ -176,4 +142,4 @@ for(var i=0;i<split.length;i++){
 return arr;
 }
 _ "whitespace"
-  = [ \t\n\r]* {}
+  = [ \t\n\r]* {return  "whitespace"}
