@@ -243,8 +243,10 @@ function sqltomongo(input, options) {
       peg$c17 = peg$literalExpectation("in", false),
       peg$c18 = "IN",
       peg$c19 = peg$literalExpectation("IN", false),
-      peg$c20 = function(array) {
-      return {"$in":array}
+      peg$c20 = function(left, array) {
+       let dic={};
+       dic[left]={"$in":array}
+       return dic;
       },
       peg$c21 = function(n) {
       let string_array="["+text().substring(1,text().length-1)+"]"
@@ -258,12 +260,9 @@ function sqltomongo(input, options) {
       peg$c26 = peg$literalExpectation("between", false),
       peg$c27 = "BETWEEN",
       peg$c28 = peg$literalExpectation("BETWEEN", false),
-      peg$c29 = function(n1, n2) {
-      let dic={"$and":{}}
-      dic["$and"]=[];
-      dic["$and"].push({"$lte":n2})
-      dic["$and"].push({"gte":n1})
-      return dic;
+      peg$c29 = function(left, n1, n2) {
+
+      return {"$and":[{[left]:{"$gte":n1}},{[left]:{"$lte":n2}},]};
       },
       peg$c30 = "<=",
       peg$c31 = peg$literalExpectation("<=", false),
@@ -832,7 +831,7 @@ function sqltomongo(input, options) {
             s5 = peg$parsecurly_array();
             if (s5 !== peg$FAILED) {
               peg$savedPos = s0;
-              s1 = peg$c20(s5);
+              s1 = peg$c20(s1, s5);
               s0 = s1;
             } else {
               peg$currPos = s0;
@@ -1035,7 +1034,7 @@ function sqltomongo(input, options) {
                     s9 = peg$parsenumber();
                     if (s9 !== peg$FAILED) {
                       peg$savedPos = s0;
-                      s1 = peg$c29(s5, s9);
+                      s1 = peg$c29(s1, s5, s9);
                       s0 = s1;
                     } else {
                       peg$currPos = s0;

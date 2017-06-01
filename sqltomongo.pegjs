@@ -106,8 +106,10 @@ condition=condition_in/
 		  condition_larger /
           condition_lower /
           condition_lower_or_equal
-condition_in=left _ ("in"/"IN") _ array:curly_array{
-return {"$in":array}
+condition_in=left:left _ ("in"/"IN") _ array:curly_array{
+ let dic={};
+ dic[left]={"$in":array}
+ return dic;
 }
 curly_array="(" _ n:num_seq _")"{
 let string_array="["+text().substring(1,text().length-1)+"]"
@@ -115,12 +117,9 @@ return JSON.parse(string_array);
 
 }
 num_seq=n1:right _ n2:("," _ right)*{}
-condition_between= left _ ("between"/"BETWEEN") _ n1:number _ and_operator _ n2:number{
-let dic={"$and":{}}
-dic["$and"]=[];
-dic["$and"].push({"$lte":n2})
-dic["$and"].push({"gte":n1})
-return dic;
+condition_between= left:left _ ("between"/"BETWEEN") _ n1:number _ and_operator _ n2:number{
+
+return {"$and":[{[left]:{"$gte":n1}},{[left]:{"$lte":n2}},]};
 }
 condition_lower_or_equal=left:left _ "<=" _ right:right{
 let dic={};dic[left]={"$lte":right}
