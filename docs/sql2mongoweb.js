@@ -146,12 +146,12 @@ function sqltomongo(input, options) {
       peg$c2 = "from",
       peg$c3 = peg$literalExpectation("from", false),
       peg$c4 = function(cols, table, where) {
-      	let show={}
+      	let columns={}
         for(var i=0;i<cols.length;i++){
-        	show[cols[i]]=1;
+        	columns[cols[i]]=1;
         }
 
-        return {"collection":table,"conditions":where|| {},"show":show ||{}}
+        return {"collection":table,"condition":where|| {},"columns":columns ||{}}
 
 
 
@@ -180,19 +180,22 @@ function sqltomongo(input, options) {
 
         	let original_object={}
         	let current_state=original_object;
+          let previous_state=undefined;
 
           for(var i=0;i<data.length;i++){
               var current_operator=data[i]["operator"]
 
               if(!Array.isArray(current_state)){
-              if(current_operator==null){
-              }
-              	if(current_operator=== null && i==0){
+
+              	if(( current_operator=== null && i==0)){
                   	original_object=data[i]["condition"];
                       continue;
                   }
+
               	current_state["$"+current_operator]=[]
+      					previous_state=current_state;
                   current_state=current_state["$"+current_operator]
+
                   current_state.push(data[i]["condition"])
               }
               else{
@@ -204,8 +207,10 @@ function sqltomongo(input, options) {
 
       		var length=current_state.length
              current_state.push({["$"+current_operator]:[data[i]["condition"]]})
+      	   previous_state=current_state
 
              current_state=current_state[current_state.length-1]["$"+current_operator]
+
 
               }
 
@@ -301,17 +306,20 @@ function sqltomongo(input, options) {
       peg$c73 = "\"",
       peg$c74 = peg$literalExpectation("\"", false),
       peg$c75 = function(str) {return str.join("")},
-      peg$c76 = /^[a-zA-z0-9.!\/]/,
-      peg$c77 = peg$classExpectation([["a", "z"], ["A", "z"], ["0", "9"], ".", "!", "/"], false, false),
-      peg$c78 = /^[0-9.]/,
-      peg$c79 = peg$classExpectation([["0", "9"], "."], false, false),
-      peg$c80 = function() {return JSON.parse(text())},
-      peg$c81 = /^[a-zA-z0-9]/,
-      peg$c82 = peg$classExpectation([["a", "z"], ["A", "z"], ["0", "9"]], false, false),
-      peg$c83 = function(tbl) {return text()},
-      peg$c84 = /^[a-zA-z0-9\/*,.]/,
-      peg$c85 = peg$classExpectation([["a", "z"], ["A", "z"], ["0", "9"], "/", "*", ",", "."], false, false),
-      peg$c86 = function(col) {
+      peg$c76 = "'",
+      peg$c77 = peg$literalExpectation("'", false),
+      peg$c78 = function(str) {return str.join()},
+      peg$c79 = /^[a-zA-z0-9.!\/ ]/,
+      peg$c80 = peg$classExpectation([["a", "z"], ["A", "z"], ["0", "9"], ".", "!", "/", " "], false, false),
+      peg$c81 = /^[0-9.]/,
+      peg$c82 = peg$classExpectation([["0", "9"], "."], false, false),
+      peg$c83 = function() {return JSON.parse(text())},
+      peg$c84 = /^[a-zA-z0-9]/,
+      peg$c85 = peg$classExpectation([["a", "z"], ["A", "z"], ["0", "9"]], false, false),
+      peg$c86 = function(tbl) {return text()},
+      peg$c87 = /^[a-zA-z0-9\/*,.]/,
+      peg$c88 = peg$classExpectation([["a", "z"], ["A", "z"], ["0", "9"], "/", "*", ",", "."], false, false),
+      peg$c89 = function(col) {
       var columns=text();
 
       if(columns.search(',')===-1){
@@ -329,10 +337,10 @@ function sqltomongo(input, options) {
       }
       return arr;
       },
-      peg$c87 = peg$otherExpectation("whitespace"),
-      peg$c88 = /^[ \t\n\r]/,
-      peg$c89 = peg$classExpectation([" ", "\t", "\n", "\r"], false, false),
-      peg$c90 = function() {return  "whitespace"},
+      peg$c90 = peg$otherExpectation("whitespace"),
+      peg$c91 = /^[ \t\n\r]/,
+      peg$c92 = peg$classExpectation([" ", "\t", "\n", "\r"], false, false),
+      peg$c93 = function() {return  "whitespace"},
 
       peg$currPos          = 0,
       peg$savedPos         = 0,
@@ -1453,7 +1461,43 @@ function sqltomongo(input, options) {
         s0 = peg$FAILED;
       }
       if (s0 === peg$FAILED) {
-        s0 = peg$parsenumber();
+        s0 = peg$currPos;
+        if (input.charCodeAt(peg$currPos) === 39) {
+          s1 = peg$c76;
+          peg$currPos++;
+        } else {
+          s1 = peg$FAILED;
+          if (peg$silentFails === 0) { peg$fail(peg$c77); }
+        }
+        if (s1 !== peg$FAILED) {
+          s2 = peg$parsetext();
+          if (s2 !== peg$FAILED) {
+            if (input.charCodeAt(peg$currPos) === 34) {
+              s3 = peg$c73;
+              peg$currPos++;
+            } else {
+              s3 = peg$FAILED;
+              if (peg$silentFails === 0) { peg$fail(peg$c74); }
+            }
+            if (s3 !== peg$FAILED) {
+              peg$savedPos = s0;
+              s1 = peg$c78(s2);
+              s0 = s1;
+            } else {
+              peg$currPos = s0;
+              s0 = peg$FAILED;
+            }
+          } else {
+            peg$currPos = s0;
+            s0 = peg$FAILED;
+          }
+        } else {
+          peg$currPos = s0;
+          s0 = peg$FAILED;
+        }
+        if (s0 === peg$FAILED) {
+          s0 = peg$parsenumber();
+        }
       }
     }
 
@@ -1496,21 +1540,21 @@ function sqltomongo(input, options) {
     var s0, s1;
 
     s0 = [];
-    if (peg$c76.test(input.charAt(peg$currPos))) {
+    if (peg$c79.test(input.charAt(peg$currPos))) {
       s1 = input.charAt(peg$currPos);
       peg$currPos++;
     } else {
       s1 = peg$FAILED;
-      if (peg$silentFails === 0) { peg$fail(peg$c77); }
+      if (peg$silentFails === 0) { peg$fail(peg$c80); }
     }
     while (s1 !== peg$FAILED) {
       s0.push(s1);
-      if (peg$c76.test(input.charAt(peg$currPos))) {
+      if (peg$c79.test(input.charAt(peg$currPos))) {
         s1 = input.charAt(peg$currPos);
         peg$currPos++;
       } else {
         s1 = peg$FAILED;
-        if (peg$silentFails === 0) { peg$fail(peg$c77); }
+        if (peg$silentFails === 0) { peg$fail(peg$c80); }
       }
     }
 
@@ -1522,26 +1566,26 @@ function sqltomongo(input, options) {
 
     s0 = peg$currPos;
     s1 = [];
-    if (peg$c78.test(input.charAt(peg$currPos))) {
+    if (peg$c81.test(input.charAt(peg$currPos))) {
       s2 = input.charAt(peg$currPos);
       peg$currPos++;
     } else {
       s2 = peg$FAILED;
-      if (peg$silentFails === 0) { peg$fail(peg$c79); }
+      if (peg$silentFails === 0) { peg$fail(peg$c82); }
     }
     while (s2 !== peg$FAILED) {
       s1.push(s2);
-      if (peg$c78.test(input.charAt(peg$currPos))) {
+      if (peg$c81.test(input.charAt(peg$currPos))) {
         s2 = input.charAt(peg$currPos);
         peg$currPos++;
       } else {
         s2 = peg$FAILED;
-        if (peg$silentFails === 0) { peg$fail(peg$c79); }
+        if (peg$silentFails === 0) { peg$fail(peg$c82); }
       }
     }
     if (s1 !== peg$FAILED) {
       peg$savedPos = s0;
-      s1 = peg$c80();
+      s1 = peg$c83();
     }
     s0 = s1;
 
@@ -1552,12 +1596,12 @@ function sqltomongo(input, options) {
     var s0, s1;
 
     s0 = [];
-    if (peg$c81.test(input.charAt(peg$currPos))) {
+    if (peg$c84.test(input.charAt(peg$currPos))) {
       s1 = input.charAt(peg$currPos);
       peg$currPos++;
     } else {
       s1 = peg$FAILED;
-      if (peg$silentFails === 0) { peg$fail(peg$c82); }
+      if (peg$silentFails === 0) { peg$fail(peg$c85); }
     }
     if (s1 === peg$FAILED) {
       if (input.charCodeAt(peg$currPos) === 34) {
@@ -1570,12 +1614,12 @@ function sqltomongo(input, options) {
     }
     while (s1 !== peg$FAILED) {
       s0.push(s1);
-      if (peg$c81.test(input.charAt(peg$currPos))) {
+      if (peg$c84.test(input.charAt(peg$currPos))) {
         s1 = input.charAt(peg$currPos);
         peg$currPos++;
       } else {
         s1 = peg$FAILED;
-        if (peg$silentFails === 0) { peg$fail(peg$c82); }
+        if (peg$silentFails === 0) { peg$fail(peg$c85); }
       }
       if (s1 === peg$FAILED) {
         if (input.charCodeAt(peg$currPos) === 34) {
@@ -1592,37 +1636,6 @@ function sqltomongo(input, options) {
   }
 
   function peg$parsetable() {
-    var s0, s1, s2;
-
-    s0 = peg$currPos;
-    s1 = [];
-    if (peg$c81.test(input.charAt(peg$currPos))) {
-      s2 = input.charAt(peg$currPos);
-      peg$currPos++;
-    } else {
-      s2 = peg$FAILED;
-      if (peg$silentFails === 0) { peg$fail(peg$c82); }
-    }
-    while (s2 !== peg$FAILED) {
-      s1.push(s2);
-      if (peg$c81.test(input.charAt(peg$currPos))) {
-        s2 = input.charAt(peg$currPos);
-        peg$currPos++;
-      } else {
-        s2 = peg$FAILED;
-        if (peg$silentFails === 0) { peg$fail(peg$c82); }
-      }
-    }
-    if (s1 !== peg$FAILED) {
-      peg$savedPos = s0;
-      s1 = peg$c83(s1);
-    }
-    s0 = s1;
-
-    return s0;
-  }
-
-  function peg$parsecol() {
     var s0, s1, s2;
 
     s0 = peg$currPos;
@@ -1653,38 +1666,69 @@ function sqltomongo(input, options) {
     return s0;
   }
 
+  function peg$parsecol() {
+    var s0, s1, s2;
+
+    s0 = peg$currPos;
+    s1 = [];
+    if (peg$c87.test(input.charAt(peg$currPos))) {
+      s2 = input.charAt(peg$currPos);
+      peg$currPos++;
+    } else {
+      s2 = peg$FAILED;
+      if (peg$silentFails === 0) { peg$fail(peg$c88); }
+    }
+    while (s2 !== peg$FAILED) {
+      s1.push(s2);
+      if (peg$c87.test(input.charAt(peg$currPos))) {
+        s2 = input.charAt(peg$currPos);
+        peg$currPos++;
+      } else {
+        s2 = peg$FAILED;
+        if (peg$silentFails === 0) { peg$fail(peg$c88); }
+      }
+    }
+    if (s1 !== peg$FAILED) {
+      peg$savedPos = s0;
+      s1 = peg$c89(s1);
+    }
+    s0 = s1;
+
+    return s0;
+  }
+
   function peg$parse_() {
     var s0, s1, s2;
 
     peg$silentFails++;
     s0 = peg$currPos;
     s1 = [];
-    if (peg$c88.test(input.charAt(peg$currPos))) {
+    if (peg$c91.test(input.charAt(peg$currPos))) {
       s2 = input.charAt(peg$currPos);
       peg$currPos++;
     } else {
       s2 = peg$FAILED;
-      if (peg$silentFails === 0) { peg$fail(peg$c89); }
+      if (peg$silentFails === 0) { peg$fail(peg$c92); }
     }
     while (s2 !== peg$FAILED) {
       s1.push(s2);
-      if (peg$c88.test(input.charAt(peg$currPos))) {
+      if (peg$c91.test(input.charAt(peg$currPos))) {
         s2 = input.charAt(peg$currPos);
         peg$currPos++;
       } else {
         s2 = peg$FAILED;
-        if (peg$silentFails === 0) { peg$fail(peg$c89); }
+        if (peg$silentFails === 0) { peg$fail(peg$c92); }
       }
     }
     if (s1 !== peg$FAILED) {
       peg$savedPos = s0;
-      s1 = peg$c90();
+      s1 = peg$c93();
     }
     s0 = s1;
     peg$silentFails--;
     if (s0 === peg$FAILED) {
       s1 = peg$FAILED;
-      if (peg$silentFails === 0) { peg$fail(peg$c87); }
+      if (peg$silentFails === 0) { peg$fail(peg$c90); }
     }
 
     return s0;

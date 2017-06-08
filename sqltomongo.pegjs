@@ -1,11 +1,10 @@
-
 sql="select" _ cols:col _ "from" _ table:table _ where:where _  semicolon {
-	let show={}
+	let columns={}
   for(var i=0;i<cols.length;i++){
-  	show[cols[i]]=1;
+  	columns[cols[i]]=1;
   }
 
-  return {"collection":table,"conditions":where|| {},"show":show ||{}}
+  return {"collection":table,"condition":where|| {},"columns":columns ||{}}
 
 
 
@@ -30,19 +29,22 @@ return w;
 
   	let original_object={}
   	let current_state=original_object;
+    let previous_state=undefined;
 
     for(var i=0;i<data.length;i++){
         var current_operator=data[i]["operator"]
 
         if(!Array.isArray(current_state)){
-        if(current_operator==null){
-        }
-        	if(current_operator=== null && i==0){
+
+        	if(( current_operator=== null && i==0)){
             	original_object=data[i]["condition"];
                 continue;
             }
+
         	current_state["$"+current_operator]=[]
+					previous_state=current_state;
             current_state=current_state["$"+current_operator]
+
             current_state.push(data[i]["condition"])
         }
         else{
@@ -54,8 +56,10 @@ return w;
 
 		var length=current_state.length
        current_state.push({["$"+current_operator]:[data[i]["condition"]]})
+	   previous_state=current_state
 
        current_state=current_state[current_state.length-1]["$"+current_operator]
+
 
         }
 
@@ -114,12 +118,12 @@ left=text {return text()}
 right=("true" /"True"/"TRUE"/"False"/"false"/"FALSE"){
 return JSON.parse(text())
 }/
-'"'str:text'"'
-{return str.join("")} /
+('"'str:text'"'{return str.join("")})/("'"str:text'"'{return str.join()})
+ /
 number
 
 compare="=" / "<" /">"
-text=[a-zA-z0-9.!/]*
+text=[a-zA-z0-9.!/ ]*
 number= [0-9.]* {return JSON.parse(text())}
 rtext=([a-zA-z0-9]/'"')*
 table=tbl:[a-zA-z0-9]* {return text()}

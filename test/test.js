@@ -1,8 +1,8 @@
 
 var sqltomongo = require('../sqltomongo.js').parse
-function generateQuery(table,conditions={},show={}){
+function generateQuery(table,condition={},columns={}){
 
-let empty={"collection":table,"conditions":conditions,"show":show}
+let empty={"collection":table,"condition":condition,"columns":columns}
 return empty;
 }
 var assert = require('assert');
